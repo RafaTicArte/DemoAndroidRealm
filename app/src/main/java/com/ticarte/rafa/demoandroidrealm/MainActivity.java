@@ -31,6 +31,13 @@ public class MainActivity extends AppCompatActivity {
     ArrayList<Person> listPersons;
     ArrayAdapter<String> adapterPersons;
 
+    // La base de datos está inicializada en la clase MyApplication
+
+    // Por no complicar el ejemplo, el adaptador creado será del tipo String,
+    // así que al recuperar de la base de datos la lista de objetos
+    // se hará una transformación a una lista de String
+    // que será la que se cargue en el adaptador.
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -38,17 +45,20 @@ public class MainActivity extends AppCompatActivity {
         Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
-        // La base de datos está inicializada en la clase MyApplication
-
         listViewPersons = (ListView)findViewById(R.id.listViewPersons);
         editTextName = (EditText) findViewById(R.id.editTextName);
-
+        listPersons = new ArrayList<>();
         listNames = new ArrayList<>();
 
+        // Inicialización del adaptador
         adapterPersons = new ArrayAdapter<String>(this,
                 android.R.layout.simple_list_item_1, android.R.id.text1, listNames);
         listViewPersons.setAdapter(adapterPersons);
 
+        // Carga de datos en el adaptador
+        loadDataAdapter();
+
+        // Configuración del clic en los elementos del adaptador
         listViewPersons.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
@@ -68,11 +78,11 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
+        // Configuración del clic largo en los elementos del adaptador
         listViewPersons.setOnItemLongClickListener(new AdapterView.OnItemLongClickListener() {
             @Override
             public boolean onItemLongClick(AdapterView<?> parent, View view, int position, long id) {
-                Log.d("ListView", listNames.get(position));
-
+                // Eliminación un elemento
                 Realm realm = Realm.getDefaultInstance();
 
                 realm.beginTransaction();
@@ -95,14 +105,13 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-        loadDataAdapter();
-
+        // Configuración del clic del botón guardar
         FloatingActionButton saveButton = findViewById(R.id.fab);
         saveButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 if (editTextName.getText().toString().contains(":")) {
-                    // Update item
+                    // Actualización de un elemento
                     Realm realm = Realm.getDefaultInstance();
 
                     Person personRealm = realm.where(Person.class)
@@ -118,7 +127,7 @@ public class MainActivity extends AppCompatActivity {
 
                     realm.close();
                 } else {
-                    // Insert item
+                    // Inserción de un elemento
                     Person person = new Person();
                     person.setId(UUID.randomUUID().toString());
                     person.setName(editTextName.getText().toString());
@@ -140,46 +149,25 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void loadDataAdapter() {
+        // Recuperación de un elemento
+        listPersons.clear();
+        listNames.clear();
+
         Realm realm = Realm.getDefaultInstance();
 
         RealmResults<Person> result = realm.where(Person.class)
                 .findAll();
 
-        Log.d("Realm items: ", ""+result.size());
+        Log.d("Realm find items: ", ""+result.size());
 
-        listPersons = new ArrayList<>();
         listPersons.addAll(realm.copyFromRealm(result));
 
         realm.close();
 
-        listNames.clear();
-
         for (Person person : listPersons) {
-            listNames.add(person.getId() + ":" + person.getName());
+            listNames.add(person.toString());
         }
 
         adapterPersons.notifyDataSetChanged();
-    }
-
-    @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        // Inflate the menu; this adds items to the action bar if it is present.
-        getMenuInflater().inflate(R.menu.menu_main, menu);
-        return true;
-    }
-
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        // Handle action bar item clicks here. The action bar will
-        // automatically handle clicks on the Home/Up button, so long
-        // as you specify a parent activity in AndroidManifest.xml.
-        int id = item.getItemId();
-
-        //noinspection SimplifiableIfStatement
-        if (id == R.id.action_settings) {
-            return true;
-        }
-
-        return super.onOptionsItemSelected(item);
     }
 }
