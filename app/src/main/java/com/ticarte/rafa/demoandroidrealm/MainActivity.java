@@ -10,8 +10,6 @@ import androidx.appcompat.widget.Toolbar;
 import android.util.Log;
 import android.view.View;
 
-import android.view.Menu;
-import android.view.MenuItem;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.EditText;
@@ -27,8 +25,8 @@ public class MainActivity extends AppCompatActivity {
 
     ListView listViewPersons;
     EditText editTextName;
-    ArrayList<String> listNames;
-    ArrayList<Person> listPersons;
+    ArrayList<String> names;
+    ArrayList<Person> persons;
     ArrayAdapter<String> adapterPersons;
 
     // La base de datos está inicializada en la clase MyApplication
@@ -47,12 +45,12 @@ public class MainActivity extends AppCompatActivity {
 
         listViewPersons = (ListView)findViewById(R.id.listViewPersons);
         editTextName = (EditText) findViewById(R.id.editTextName);
-        listPersons = new ArrayList<>();
-        listNames = new ArrayList<>();
+        persons = new ArrayList<>();
+        names = new ArrayList<>();
 
         // Inicialización del adaptador
         adapterPersons = new ArrayAdapter<String>(this,
-                android.R.layout.simple_list_item_1, android.R.id.text1, listNames);
+                android.R.layout.simple_list_item_1, android.R.id.text1, names);
         listViewPersons.setAdapter(adapterPersons);
 
         // Carga de datos en el adaptador
@@ -62,12 +60,12 @@ public class MainActivity extends AppCompatActivity {
         listViewPersons.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                Log.d("ListView", listNames.get(position));
+                Log.d("ListView", names.get(position));
 
                 Realm realm = Realm.getDefaultInstance();
 
                 Person personRealm = realm.where(Person.class)
-                        .equalTo("id", listNames.get(position).split(":")[0])
+                        .equalTo("id", names.get(position).split(":")[0])
                         .findFirst();
 
                 Person person = realm.copyFromRealm(personRealm);
@@ -88,7 +86,7 @@ public class MainActivity extends AppCompatActivity {
                 realm.beginTransaction();
 
                 Person personRealm = realm.where(Person.class)
-                        .equalTo("id", listNames.get(position).split(":")[0])
+                        .equalTo("id", names.get(position).split(":")[0])
                         .findFirst();
 
                 personRealm.deleteFromRealm();
@@ -150,8 +148,8 @@ public class MainActivity extends AppCompatActivity {
 
     private void loadDataAdapter() {
         // Recuperación de un elemento
-        listPersons.clear();
-        listNames.clear();
+        persons.clear();
+        names.clear();
 
         Realm realm = Realm.getDefaultInstance();
 
@@ -160,12 +158,12 @@ public class MainActivity extends AppCompatActivity {
 
         Log.d("Realm find items: ", ""+result.size());
 
-        listPersons.addAll(realm.copyFromRealm(result));
+        persons.addAll(realm.copyFromRealm(result));
 
         realm.close();
 
-        for (Person person : listPersons) {
-            listNames.add(person.toString());
+        for (Person person : persons) {
+            names.add(person.toString());
         }
 
         adapterPersons.notifyDataSetChanged();
