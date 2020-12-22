@@ -60,8 +60,7 @@ public class MainActivity extends AppCompatActivity {
         listViewPersons.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                Log.d("ListView", names.get(position));
-
+                // Recuperación de un elemento
                 Realm realm = Realm.getDefaultInstance();
 
                 Person personRealm = realm.where(Person.class)
@@ -83,15 +82,13 @@ public class MainActivity extends AppCompatActivity {
                 // Eliminación un elemento
                 Realm realm = Realm.getDefaultInstance();
 
-                realm.beginTransaction();
+                realm.executeTransaction(r -> {
+                    Person personRealm = realm.where(Person.class)
+                            .equalTo("id", names.get(position).split(":")[0])
+                            .findFirst();
 
-                Person personRealm = realm.where(Person.class)
-                        .equalTo("id", names.get(position).split(":")[0])
-                        .findFirst();
-
-                personRealm.deleteFromRealm();
-
-                realm.commitTransaction();
+                    personRealm.deleteFromRealm();
+                });
 
                 realm.close();
 
@@ -112,29 +109,28 @@ public class MainActivity extends AppCompatActivity {
                     // Actualización de un elemento
                     Realm realm = Realm.getDefaultInstance();
 
-                    Person personRealm = realm.where(Person.class)
-                            .equalTo("id", editTextName.getText().toString().split(":")[0])
-                            .findFirst();
+                    realm.executeTransaction(r -> {
+                        Person personRealm = realm.where(Person.class)
+                                .equalTo("id", editTextName.getText().toString().split(":")[0])
+                                .findFirst();
 
-                    Person person = realm.copyFromRealm(personRealm);
-                    person.setName(editTextName.getText().toString().split(":")[1]);
-
-                    realm.beginTransaction();
-                    realm.copyToRealmOrUpdate(person);
-                    realm.commitTransaction();
+                        Person person = realm.copyFromRealm(personRealm);
+                        person.setName(editTextName.getText().toString().split(":")[1]);
+                        realm.copyToRealmOrUpdate(person);
+                    });
 
                     realm.close();
                 } else {
                     // Inserción de un elemento
-                    Person person = new Person();
-                    person.setId(UUID.randomUUID().toString());
-                    person.setName(editTextName.getText().toString());
-
                     Realm realm = Realm.getDefaultInstance();
 
-                    realm.beginTransaction();
-                    realm.copyToRealm(person);
-                    realm.commitTransaction();
+                    realm.executeTransaction(r -> {
+                        Person person = new Person();
+                        person.setId(UUID.randomUUID().toString());
+                        person.setName(editTextName.getText().toString());
+
+                        realm.copyToRealm(person);
+                    });
 
                     realm.close();
 
@@ -147,7 +143,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void loadDataAdapter() {
-        // Recuperación de un elemento
+        // Recuperación de todos los elementos
         persons.clear();
         names.clear();
 
